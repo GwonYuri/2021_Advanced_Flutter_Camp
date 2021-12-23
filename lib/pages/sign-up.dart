@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:face_net_authentication/pages/widgets/FacePainter.dart';
 import 'package:face_net_authentication/pages/widgets/auth-action-button.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
@@ -10,6 +11,7 @@ import 'package:face_net_authentication/services/ml_kit_service.dart';
 import 'package:camera/camera.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class SignUp extends StatefulWidget {
   final CameraDescription cameraDescription;
@@ -34,6 +36,8 @@ class SignUpState extends State<SignUp> {
   // switchs when the user press the camera
   bool _saving = false;
   bool _bottomSheetVisible = false;
+
+  XFile file;
 
   // service injection
   MLKitService _mlKitService = MLKitService();
@@ -86,10 +90,11 @@ class SignUpState extends State<SignUp> {
       await Future.delayed(Duration(milliseconds: 500));
       await _cameraService.cameraController.stopImageStream();
       await Future.delayed(Duration(milliseconds: 200));
-      XFile file = await _cameraService.takePicture();
-      imagePath = file.path;
+      XFile file2 = await _cameraService.takePicture();
+      imagePath = file2.path;
 
       setState(() {
+        file = file2;
         _bottomSheetVisible = true;
         pictureTaked = true;
       });
@@ -97,6 +102,40 @@ class SignUpState extends State<SignUp> {
       return true;
     }
   }
+
+  create() async{
+    try {
+      await FirebaseFirestore.instance
+          .collection("user")
+          .doc()
+          .set({
+        "user" : "aaaa",
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  // Image_upload() async{
+  //   if(imagePath != null) {
+  //     var snapshot = await FirebaseStorage.instance
+  //         .ref()
+  //         .child('$dateTime.png')
+  //         .putFile(file);
+  //
+  //     String url = await snapshot.ref.getDownloadURL();
+  //     print(url);
+  //     image_url = url;
+  //     await update(url);
+  //   }
+  //
+  //   else{
+  //     String url = await FirebaseStorage.instance
+  //         .ref('default.png')
+  //         .getDownloadURL();
+  //     await update(url);
+  //   }
+  // }
 
   /// draws rectangles when detects faces
   _frameFaces() {
@@ -139,6 +178,7 @@ class SignUpState extends State<SignUp> {
   }
 
   _onBackPressed() {
+    create();
     Navigator.of(context).pop();
   }
 

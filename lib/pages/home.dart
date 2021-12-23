@@ -88,18 +88,6 @@ class _MyHomePageState extends State<MyHomePage> {
           elevation: 0,
           backgroundColor: Colors.transparent,
           actions: <Widget>[
-            Column(
-              children: [
-                TextButton(
-                  onPressed: (){
-                    FirebaseFirestore.instance
-                    .collection("user")
-                    .doc()
-                    .set({
-                  "user" : "aaaa",
-                });
-                    },
-                    child: Text('f')),
                 Padding(
                   padding: EdgeInsets.only(right: 20, top: 20),
                   child: PopupMenuButton<String>(
@@ -124,8 +112,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                   ),
                 ),
-              ],
-            ),
           ],
         ),
         body: !loading
