@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "348624245977",
+    "project_id": "advanced-flutter-camp-ef65f",
+    "storage_bucket": "advanced-flutter-camp-ef65f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:348624245977:android:cca26c6159755e6ad45ac8",
+        "android_client_info": {
+          "package_name": "com.example.tflite_flutter_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "348624245977-1l7t38kr0n0ag1d03qhptq3hu24ll211.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVVLHSuGLM0zEsob786IuL0ps668QEWII"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "348624245977-1l7t38kr0n0ag1d03qhptq3hu24ll211.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "348624245977-t79cneqfg4q843ckj4nodv4je5296du1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.advanced"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
