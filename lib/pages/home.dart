@@ -65,18 +65,18 @@ class _MyHomePageState extends State<MyHomePage> {
       ? await launch(githubURL)
       : throw 'Could not launch $githubURL';
 
-  // create() async{
-  //   try {
-  //     await FirebaseFirestore.instance
-  //         .collection("user")
-  //         .doc()
-  //         .set({
-  //       "user" : "aaaa",
-  //     });
-  //   } catch (e) {
-  //     print(e);
-  //   }
-  // }
+  create() async{
+    try {
+      await FirebaseFirestore.instance
+          .collection("user")
+          .doc()
+          .set({
+        "user" : "aaaa",
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +90,16 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: <Widget>[
             Column(
               children: [
-                // TextButton(onPressed: create(), child: Text('f')),
+                TextButton(
+                  onPressed: (){
+                    FirebaseFirestore.instance
+                    .collection("user")
+                    .doc()
+                    .set({
+                  "user" : "aaaa",
+                });
+                    },
+                    child: Text('f')),
                 Padding(
                   padding: EdgeInsets.only(right: 20, top: 20),
                   child: PopupMenuButton<String>(
