@@ -34,7 +34,7 @@
               "client_id": "348624245977-t79cneqfg4q843ckj4nodv4je5296du1.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.advanced"
+                "bundle_id": "com.example.tflite_flutter_app"
               }
             }
           ]
