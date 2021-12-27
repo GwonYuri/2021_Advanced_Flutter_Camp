@@ -8,74 +8,195 @@ import 'home.dart';
 import 'dart:math' as math;
 
 class Profile extends StatelessWidget {
-  const Profile(this.username, {Key key, this.imagePath}) : super(key: key);
-  final String username;
-  final String imagePath;
+  RecorderStream _recorder = RecorderStream();
 
-  final String githubURL =
-      "https://github.com/MCarlomagno/FaceRecognitionAuth/tree/master";
+  bool inputState = true;
 
-  void _launchURL() async => await canLaunch(githubURL)
-      ? await launch(githubURL)
-      : throw 'Could not launch $githubURL';
+  List<int> _micChunks = [];
+  bool _isRecording = false;
+  late StreamSubscription _recorderStatus;
+  late StreamSubscription _audioStream;
+
+  late StreamController<List<Category>> streamController;
+  late Timer _timer;
+
+  late Classifier _classifier;
+
+  List<Category> preds = [];
+
+  RandomColor randomColorGen = RandomColor();
+
+  Category? prediction;
+
+  @override
+  void initState() {
+    super.initState();
+    streamController = StreamController();
+    initPlugin();
+    _classifier = Classifier();
+    _timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+      streamController.add(_classifier.predict(_micChunks));
+    });
+  }
+
+  @override
+  void dispose() {
+    _recorderStatus.cancel();
+    _audioStream.cancel();
+    _timer.cancel();
+    super.dispose();
+  }
+
+  Future<void> initPlugin() async {
+    _recorderStatus = _recorder.status.listen((status) {
+      if (mounted)
+        setState(() {
+          _isRecording = status == SoundStreamStatus.Playing;
+        });
+    });
+
+    _audioStream = _recorder.audioStream.listen((data) {
+      if (_micChunks.length > 2 * sampleRate) {
+        _micChunks.clear();
+      }
+      _micChunks.addAll(data);
+    });
+
+    streamController.stream.listen((event) {
+      setState(() {
+        preds = event;
+      });
+    });
+
+    await Future.wait([_recorder.initialize(), _recorder.start()]);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final double mirror = math.pi;
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Container(
+    return MaterialApp(
+      theme: ThemeData(primaryColor: Colors.orange, accentColor: Colors.orange),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            '차량 주변 소음 감지기',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.black,
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: FileImage(File(imagePath)),
-                      ),
-                    ),
-                    margin: EdgeInsets.all(20),
-                    width: 50,
-                    height: 50,
-                    // child: Transform(
-                    //     alignment: Alignment.center,
-                    //     child: FittedBox(
-                    //       fit: BoxFit.cover,
-                    //       child: Image.file(File(imagePath)),
-                    //     ),
-                    //     transform: Matrix4.rotationY(mirror)),
-                  ),
                   Text(
-                    'Hi ' + username + '!',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                    "감지 on/off",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(width: 8),
+                  Switch(
+                    value: inputState,
+                    onChanged: (value) {
+                      if (value) {
+                        _audioStream.resume();
+                      } else {
+                        _audioStream.pause();
+                      }
+                      setState(() {
+                        inputState = value;
+                      });
+                    },
                   ),
                 ],
               ),
-              Spacer(),
-              AppButton(
-                text: "LOG OUT",
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MyHomePage()),
-                  );
-                },
-                icon: Icon(
-                  Icons.logout,
-                  color: Colors.white,
+              Divider(),
+              if (inputState)
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: preds.length,
+                  itemBuilder: (context, i) {
+                    final color = randomColorGen.randomColor(
+                        colorBrightness: ColorBrightness.light);
+                    return Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              preds.elementAt(i).label,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.blueAccent),
+                            ),
+                          ),
+                          Stack(
+                            alignment: AlignmentDirectional.centerStart,
+                            children: [
+                              PredictionScoreBar(
+                                ratio: 1,
+                                color: color.withOpacity(0.1),
+                              ),
+                              PredictionScoreBar(
+                                ratio: preds.elementAt(i).score,
+                                color: color,
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                color: Color(0xFFFF6161),
-              ),
               SizedBox(
-                height: 20,
-              )
+                height: 100,
+              ),
+
+              if(preds.elementAt(0).label=="Music")
+                Container(
+                  child: Center(
+                    child: Text(preds.elementAt(0).label+"이 재생 되는 중입니다~",
+                      style: TextStyle(
+                        fontSize: 22.0,
+
+                      ),),
+                  ),
+                )
+              else if(preds.elementAt(0).label!="Speech"
+                  &&preds.elementAt(0).label!="Silence"
+                  && preds.elementAt(0).label!="Music")
+                Container(
+                  child: Center(
+                    child: Text(preds.elementAt(0).label+"(이)가 주변에 있습니다. \n조심히 피해가세요!",
+                      style: TextStyle(
+                        fontSize: 22.0,
+
+                      ),),
+                  ),
+                )
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class PredictionScoreBar extends StatelessWidget {
+  final double ratio;
+  final Color color;
+  const PredictionScoreBar({Key? key, required this.ratio, required this.color})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 16,
+      width: (MediaQuery.of(context).size.width * 0.6) * ratio,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.horizontal(
+          left: Radius.circular(4.0),
+          right: Radius.circular(ratio == 1 ? 4.0 : 0.0),
         ),
       ),
     );
